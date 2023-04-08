@@ -2,6 +2,18 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.1"
 
+
+"""
+You must import command_tools.errors first !!!
+
+else
+
+you might get a error like this
+
+AttributeError: partially initialized module 'command_tools.types_' has no attribute 'OperateLevel' (most likely due to a circular import)
+"""
+
+
 import pickle
 from typing import Union
 
@@ -9,7 +21,13 @@ from command_tools import errors
 
 
 class CommandList:
+    """
+    指令列表
+    """
     def __init__(self, list_: dict = None):
+        """
+        :param list_: 已存在的指令列表
+        """
         if list_ is None:
             list_ = {}
 
@@ -29,6 +47,9 @@ class CommandList:
 
 
 class LeadChar:
+    """
+    领导符列表
+    """
     def __init__(self, list_: list):
         self.list_ = list_
 
@@ -37,14 +58,24 @@ class LeadChar:
 
 
 class OperateLevel(float):
+    """
+    权限等级
+    """
     pass
 
 
 class OperateLevelList:
+    """
+    权限等级注册表
+    """
     def __init__(self):
         self.level_list = {}
 
     def append(self, name, level: float):
+        """
+        :param name: 权限等级名
+        :param level: 等级对应数值
+        """
         try:
             self.level_list.__getitem__(name)
         except KeyError:
@@ -53,10 +84,16 @@ class OperateLevelList:
             raise errors.OperateLevelAlreadyExistError(level_name=name)
 
     def save(self, file):
+        """
+        :param file: 文件路径
+        """
         pickle.dump(self, file)
 
     @staticmethod
     def load(file):
+        """
+        :param file: 文件路径
+        """
         return pickle.load(file)
 
     def __getitem__(self, item) -> OperateLevel:
@@ -64,11 +101,21 @@ class OperateLevelList:
 
 
 class UserList:
+    """
+    用户列表
+    """
     def __init__(self, default_level: Union[float, OperateLevel] = 0):
+        """
+        :param default_level: 默认权限等级
+        """
         self.user_list = {}
         self.default_level = default_level
 
     def append(self, user_name, op_level: Union[float, OperateLevel]):
+        """
+        :param user_name: 用户名
+        :param op_level: 权限等级
+        """
         try:
             self.user_list.__getitem__(user_name)
         except KeyError:
@@ -86,15 +133,25 @@ class UserList:
         self.user_list.__setitem__(key, value)
 
     def reset_level(self, user_name, op_level):
+        """
+        :param user_name: 用户名
+        :param op_level: 权限等级
+        """
         self.user_list.__setitem__(user_name, op_level)
 
     def save(self, file):
+        """
+        :param file: 文件路径
+        """
         if type(file) == str:
             file = open(file, mode="wb")
         pickle.dump(self, file)
 
     @staticmethod
     def load(file):
+        """
+        :param file: 文件路径
+        """
         if type(file) == str:
             file = open(file, mode="rb")
         return pickle.load(file)

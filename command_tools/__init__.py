@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.4"
+__version__ = "R 1.0.0.0"
+
+# 版本名称规则
+# R 正式版
+# B | A 测试版
+# T 临时版
+
+"""
+
+A simple func reg tools
+
+"""
 
 
 import sys

@@ -37,13 +37,16 @@ class Command:
                  list_: Union[types_.CommandList, None] = None):
 
         """
-        :param name:
-        :param op_level:
-        :param args_maker: Callable -> list default: str.split
-        :param cut_rule: Callable -> list default: str.split
-        :param lead_char:
-        :param help_:
-        :param list_: CommandList[List]
+
+        用于注册指令
+
+        :param name: 指令名
+        :param op_level: 需求权限等级
+        :param args_maker: 对参数修改的函数
+        :param cut_rule: 裁剪规则
+        :param lead_char: 领导符
+        :param help_: 指令的帮助文档
+        :param list_: 指令注册表
         """
 
         if lead_char is None:
@@ -100,9 +103,12 @@ class RunCommand:
                  args_unpacker: callable = None):
 
         """
-        :param args_maker: Callable -> list default: str.split
-        :param cut_rule: Callable -> list default: str.split
-        :param list_: CommandList[List]
+
+        用于运行指令
+
+        :param args_maker: 指令参数生成器
+        :param cut_rule: 裁剪规则
+        :param list_: 指令注册表
         """
 
         if list_ is None:
@@ -119,7 +125,15 @@ class RunCommand:
         self._args_unpacker = args_unpacker
 
     @staticmethod
-    def _clear_lead_char(string: str, lead_char: types_.LeadChar):
+    def _clear_lead_char(string: str, lead_char: types_.LeadChar) -> str:
+        """
+
+        清除领导符
+
+        :param string: 原指令
+        :param lead_char: 领导符列表
+        :return: 根指令
+        """
         for char in lead_char:
             try:
                 temp_str = string[:len(char)]  # 可能会抛出ValueError
@@ -132,6 +146,14 @@ class RunCommand:
         raise errors.LeadCharNotFindError
 
     def _get_command_obj(self, string: str, cut_rule) -> Union[bool, dict]:
+        """
+
+        获取指令对象
+
+        :param string: 指令名
+        :param cut_rule: 剪裁规则
+        :return: 指令对应的对象
+        """
         try:
             first_word = cut_rule(string)[0]  # 获取根指令
         except IndexError:
@@ -143,6 +165,16 @@ class RunCommand:
         return False
 
     def run_by_str(self, string: str, op_level: Union[types_.OperateLevel, float], *args, **kwargs):
+        """
+
+        以字符串运行指令
+
+        :param string: 原始指令字符串
+        :param op_level: 权限等级
+        :param args: 额外向指令的位置参数
+        :param kwargs: 额外向指令的关键字参数
+        :return object: 指令运行后返回的返回值
+        """
         try:
             no_lead_char = self._clear_lead_char(string, self._lead_char)  # 获取无领导符字符串
             cmd_obj = self._get_command_obj(no_lead_char, self._cut_rule)  # 获取指令对象
@@ -174,6 +206,24 @@ class RunCommand:
         ret = self._args_unpacker(maker_ret, func=cmd_obj["func"])  # 解包并运行
 
         return ret  # 返回执行结果
+
+    def __call__(self, string: str, op_level: Union[types_.OperateLevel, float], *args, **kwargs):
+
+        """
+
+        运行run_by_str的快捷方式
+
+        以字符串运行指令
+
+        :param string: 原始指令字符串
+        :param op_level: 权限等级
+        :param args: 额外向指令的位置参数
+        :param kwargs: 额外向指令的关键字参数
+        :return object: 指令运行后返回的返回值
+
+        """
+
+        return self.run_by_str(string=string, op_level=op_level, *args, **kwargs)
 
 
 if __name__ == '__main__':
