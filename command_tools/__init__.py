@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "R 1.0.0.0"
+__version__ = "R 1.0.0.1"
 
 # 版本名称规则
 # R 正式版
@@ -9,7 +9,7 @@ __version__ = "R 1.0.0.0"
 
 """
 
-A simple func reg tools
+A simple func reg tool
 
 """
 
