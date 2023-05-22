@@ -8,13 +8,14 @@ else
 
 you might get a error like this
 
-AttributeError: partially initialized module 'command_tools.types_' has no attribute 'OperateLevel' (most likely due to a circular import)
+AttributeError: partially initialized module 'command_tools.types_' has no attribute 'OperateLevel' (most likely due 
+to a circular import)
 """
 
-import pickle
 
-from typing import Union, Tuple
+import pickle
 from collections import namedtuple
+from typing import Union, Tuple
 
 from command_tools import errors
 

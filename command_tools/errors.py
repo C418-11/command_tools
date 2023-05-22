@@ -19,7 +19,10 @@ class OperateLevelException(Exception):
 
 
 class DontHavePermissionError(OperateLevelException):  # 权限等级错误
-    def __init__(self, *, level_need: Union[float, types_.OperateLevel] = None, level_now: Union[float, types_.OperateLevel] = None):
+    def __init__(self,
+                 *,
+                 level_need: Union[float, types_.OperateLevel] = None,
+                 level_now: Union[float, types_.OperateLevel] = None):
         self.op_levels = level_need, level_now
 
     def __str__(self):

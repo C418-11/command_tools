@@ -19,7 +19,7 @@ _default_lead_char = types_.LeadChar(
 )  # 利用python浅拷贝特性完成节省内存,所以套了N层
 
 
-def _default_cut_rule(string: any, *_, **__):
+def default_cut_rule(string: any, *_, **__):
     if type(string) != str:
         return string
     return string.split()
@@ -29,40 +29,40 @@ class Command:
     def __init__(self, name: Union[str, float],
                  op_level: Union[float, types_.OperateLevel] = 0,
                  *,
-                 args_maker: callable = _default_cut_rule,
-                 cut_rule=_default_cut_rule,
+                 args_maker: callable = default_cut_rule,
+                 cut_rule=default_cut_rule,
                  lead_char: Union[types_.LeadChar, None] = None,
-                 help_: str = "Not defined!",
-                 list_: Union[types_.CommandList, None] = None):
+                 help_str: str = "Not defined!",
+                 cmd_list: Union[types_.CommandList, None] = None):
 
         """
 
         用于注册指令
 
-        :param name: 指令名
-        :param op_level: 需求权限等级
-        :param args_maker: 对参数修改的函数
-        :param cut_rule: 裁剪规则
-        :param lead_char: 领导符
-        :param help_: 指令的帮助文档
-        :param list_: 指令注册表
+        :param name: str: 指令名
+        :param op_level: Union[float, types_.OperateLevel]: 需求权限等级
+        :param args_maker: Callable: 对参数修改的函数
+        :param cut_rule: Callable: 裁剪规则
+        :param lead_char: Union[LeadChar, None]: 领导符
+        :param help_str: str: 指令的帮助文档
+        :param cmd_list: CommandList[List]: 指令注册表
         """
 
         if lead_char is None:
             lead_char = _default_lead_char
-        if list_ is None:
-            list_ = default_command_list
+        if cmd_list is None:
+            cmd_list = default_command_list
 
         self._name = name
         self._op_level = op_level
         self._args_maker = args_maker
         self._cut_rule = cut_rule
         self._lead_char = lead_char
-        self._help_ = help_
-        self._list_ = list_
+        self._help_str = help_str
+        self._cmd_list = cmd_list
         self._append_to_list = False
 
-        self._data = {"help": self._help_,
+        self._data = {"help": self._help_str,
                       "lead_char": self._lead_char,
                       "op_level": self._op_level,
                       "cut_rule": self._cut_rule,
@@ -76,9 +76,9 @@ class Command:
             update_wrapper(func, self)  # 更新类装饰器到函数
 
             try:
-                self._list_[self._name]  # 如果有同名指令已在列表(程序将跳转至else代码块
+                self._cmd_list[self._name]  # 如果有同名指令已在列表(程序将跳转至else代码块
             except KeyError:  # 如果该指令尚未注册(指令不存在
-                self._list_[self._name] = {"func": func, **self._data}  # 注册指令
+                self._cmd_list[self._name] = {"func": func, **self._data}  # 注册指令
             else:  # 如果try的代码块能正常运行就会跳转到else(指令存在
                 raise errors.CommandAlreadyExistError(command_name=self._name)  # 指令已存在,进行报错
 
@@ -89,15 +89,15 @@ class Command:
         return decorated
 
 
-def _default_args_unpacker(*args, func, **kwargs):
+def default_args_unpacker(*args, func, **kwargs):
     return func(*args, **kwargs)
 
 
 class RunCommand:
     def __init__(self,
-                 args_maker: callable = _default_cut_rule,
-                 cut_rule=_default_cut_rule,
-                 list_: Union[types_.CommandList, None] = None,
+                 args_maker: callable = default_cut_rule,
+                 cut_rule=default_cut_rule,
+                 cmd_list: Union[types_.CommandList, None] = None,
                  lead_char: Union[types_.LeadChar, None] = None,
                  args_unpacker: callable = None):
 
@@ -105,20 +105,20 @@ class RunCommand:
 
         用于运行指令
 
-        :param args_maker: 指令参数生成器
-        :param cut_rule: 裁剪规则
-        :param list_: 指令注册表
+        :param args_maker: Callable -> list default: str.split
+        :param cut_rule: Callable -> list default: str.split
+        :param cmd_list: CommandList[List]
         """
 
-        if list_ is None:
-            list_ = default_command_list
+        if cmd_list is None:
+            cmd_list = default_command_list
         if lead_char is None:
             lead_char = _default_lead_char
         if args_unpacker is None:
-            args_unpacker = _default_args_unpacker
+            args_unpacker = default_args_unpacker
 
         self._cut_rule = cut_rule
-        self._list_ = list_
+        self._cmd_list = cmd_list
         self._lead_char = lead_char
         self._args_maker = args_maker
         self._args_unpacker = args_unpacker
@@ -129,9 +129,9 @@ class RunCommand:
 
         清除领导符
 
-        :param string: 原指令
-        :param lead_char: 领导符列表
-        :return: 根指令
+        :param string: str: 原指令
+        :param lead_char: LeadChar: 领导符列表
+        :return: str: 根指令
         """
         for char in lead_char:
             try:
@@ -144,32 +144,32 @@ class RunCommand:
                 return string[0 + len(char):]  # 返回根指令字符串
         raise errors.LeadCharNotFindError
 
-    def _get_command_obj(self, string: str, cut_rule) -> Union[bool, dict]:
+    def _get_command_obj(self, string: str, cut_rule) -> Union[dict, None]:
         """
 
         获取指令对象
 
-        :param string: 指令名
-        :param cut_rule: 剪裁规则
-        :return: 指令对应的对象
+        :param string: str: 指令名
+        :param cut_rule: Callable: 剪裁规则
+        :return: Union[bool, dict]: 指令对应的对象
         """
         try:
             first_word = cut_rule(string)[0]  # 获取根指令
         except IndexError:
-            return False
+            return None
 
-        cmds = set(self._list_.keys())  # 用集合加速查找
+        cmds = set(self._cmd_list.keys())  # 用集合加速查找
         if first_word in cmds:  # 查找指令
-            return self._list_[first_word]  # 返回找到dict的对象
-        return False
+            return self._cmd_list[first_word]  # 返回找到dict的对象
+        return None
 
     def run_by_str(self, string: str, op_level: Union[types_.OperateLevel, float], *args, **kwargs):
         """
 
         以字符串运行指令
 
-        :param string: 原始指令字符串
-        :param op_level: 权限等级
+        :param string: str: 原始指令字符串
+        :param op_level: Union[OperateLevel, float]: 权限等级
         :param args: 额外向指令的位置参数
         :param kwargs: 额外向指令的关键字参数
         :return object: 指令运行后返回的返回值
@@ -214,8 +214,8 @@ class RunCommand:
 
         以字符串运行指令
 
-        :param string: 原始指令字符串
-        :param op_level: 权限等级
+        :param string: str: 原始指令字符串
+        :param op_level: Union[OperateLevel, float]: 权限等级
         :param args: 额外向指令的位置参数
         :param kwargs: 额外向指令的关键字参数
         :return object: 指令运行后返回的返回值
